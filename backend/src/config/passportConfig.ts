@@ -6,9 +6,10 @@ import { getCreatedOrExistUser } from '../services/auth.service';
 const { server, port } = env.app;
 const { apiKey } = env.steam;
 
-const validateUser = (_identifier: any, profile: any , done: any) => {
+const validateUser = async (_identifier: any, profile: any , done: any) => {
   const { id, displayName } = profile;
-  const user = getCreatedOrExistUser({ steamId: id, displayName });
+  const user = await getCreatedOrExistUser({ steamId: id, displayName });
+
   done(null, user);
 };
 

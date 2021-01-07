@@ -10,7 +10,9 @@ router
   .get('/login', passport.authenticate('steam', {
     session: false
   }))
-  .get('/login/return', (_req, res) => (
+  .get('/login/return', passport.authenticate('steam', {
+    session: false
+  }), (_req, res) => (
       res.redirect(client)
   ))
 
