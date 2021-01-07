@@ -3,6 +3,7 @@ import { IFetchParams } from '../models/fetch/IFetchParams';
 import { FetchMethod } from '../enums/FetchMethod';
 import { getToken } from './storageHelper';
 import { IResponseError } from '../models/fetch/IResponseError';
+import { env } from '../../env';
 
 const getInitHeaders = (contentType = 'application/json', hasContent = true) => {
   const token = getToken();
@@ -42,12 +43,14 @@ const throwIfResponseFailed = async (res: Response) => {
 };
 
 const makeRequest = (method: FetchMethod) => async <T>(url: string, params?: IFetchParams) => {
+  const domainUrl = `${env.urls.server}${url}`;
   const [fetchUrl, body] = method === FetchMethod.GET
-    ? [getFetchUrl(url, params as ParsedQuery), undefined]
+    ? [getFetchUrl(domainUrl, params as ParsedQuery), undefined]
     : [url, params];
   const fetchOptions = getFetchOptions(method, body);
 
   const res = await fetch(fetchUrl, fetchOptions);
+
   await throwIfResponseFailed(res);
   return res.json() as Promise<T>;
 };
