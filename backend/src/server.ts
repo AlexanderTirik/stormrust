@@ -8,6 +8,8 @@ import { createConnection } from 'typeorm';
 import "reflect-metadata";
 import './config/passportConfig';
 import errorHandlingMiddleware from './api/middlewares/errorHandlingMiddleware';
+import authorizationMiddleware from './api/middlewares/authorizationMiddleware';
+import routesWhiteList from './config/routesWhiteListConfig';
 
 const app = express();
 
@@ -16,6 +18,7 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(errorHandlingMiddleware);
 app.use(passport.initialize());
+app.use('/api/', authorizationMiddleware(routesWhiteList))
 routes(app);
 
 app.listen(env.app.port, async () => {
