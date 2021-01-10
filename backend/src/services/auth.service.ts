@@ -3,12 +3,17 @@ import { ErrorCode } from '../common/enums/ErrorCode';
 import CustomError from '../common/errors/CustomError';
 import { decrypt, encrypt } from '../common/helpers/encryptHelper';
 import { createToken } from '../common/helpers/tokenHelper';
-import { fromUserToIAuthUser } from '../common/mappers/User';
+import { fromUserToIAuthUser, fromUserToIClientUser } from '../common/mappers/User';
 import { ILoginProfile } from '../common/models/auth/ILoginProfile';
 import { IAuthUser } from '../common/models/user/IAuthUser';
 import { RefreshToken } from '../data/entities/RefreshToken';
 import RefreshTokenRepository from '../data/repositories/RefreshTokenRepository';
 import UserRepository from '../data/repositories/UserRepository';
+
+export const getAuthUser = async (id: string) => {
+  const user = await getCustomRepository(UserRepository).findOne({ id });
+  return fromUserToIClientUser(user);
+};
 
 export const getCreatedOrExistUser = async (profile: ILoginProfile): Promise<IAuthUser> => {
   const { steamId } = profile;

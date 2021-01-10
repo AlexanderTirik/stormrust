@@ -1,4 +1,5 @@
 export default [
   '/auth/login',
-  '/auth/login/return'
+  '/auth/login/return',
+  '/auth/tokens'
 ];
