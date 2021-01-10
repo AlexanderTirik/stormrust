@@ -1,12 +1,13 @@
 import { stringifyUrl, ParsedQuery } from 'query-string';
 import { IFetchParams } from '../models/fetch/IFetchParams';
 import { FetchMethod } from '../enums/FetchMethod';
-import { getToken } from './storageHelper';
+import { getAccessToken, getRefreshToken, setTokens } from './storageHelper';
 import { IResponseError } from '../models/fetch/IResponseError';
 import { env } from '../../env';
+import { ITokens } from '../models/fetch/ITokens';
 
 const getInitHeaders = (contentType = 'application/json', hasContent = true) => {
-  const token = getToken();
+  const token = getAccessToken();
   const headers: HeadersInit = new Headers();
 
   headers.set('Authorization', `Bearer ${token}`);
@@ -24,22 +25,49 @@ const getFetchOptions = (method: string, body?: IFetchParams) => ({
   body: body && JSON.stringify(body)
 });
 
+const parseResErrorBody = async (res: Response) => {
+  try {
+    const body = await res.text();
+    return JSON.parse(body) as IResponseError;
+  } catch (err) {
+    return null;
+  }
+};
+
 const throwIfResponseFailed = async (res: Response) => {
+  if (res.ok) {
+    return;
+  }
+
+  const body = await parseResErrorBody(res);
+
   if (!res.ok) {
     if (res.status === 401) {
       // logout();
       return;
     }
-    let parsedException: IResponseError = {
+    const parsedException: IResponseError = body || {
       message: 'Something went wrong with request!',
       status: 500
     };
-    try {
-      parsedException = await res.json();
-    } catch (err) {
-      throw parsedException;
-    }
+    throw parsedException;
   }
+};
+
+export const refreshToken = async () => {
+  const url = `${env.urls.server}/api/auth/tokens`;
+  const fetchOptions = {
+    method: FetchMethod.POST,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refreshToken: getRefreshToken() })
+  };
+  const res = await fetch(url, fetchOptions);
+
+  await throwIfResponseFailed(res);
+
+  const tokens: ITokens = await res.json();
+
+  setTokens(tokens);
 };
 
 const makeRequest = (method: FetchMethod) => async <T>(url: string, params?: IFetchParams) => {
@@ -49,10 +77,16 @@ const makeRequest = (method: FetchMethod) => async <T>(url: string, params?: IFe
     : [url, params];
   const fetchOptions = getFetchOptions(method, body);
 
-  const res = await fetch(fetchUrl, fetchOptions);
+  let res = await fetch(fetchUrl, fetchOptions);
+
+  if (res.status === 401 && getRefreshToken()) {
+    await refreshToken();
+    const newFetchOptions = getFetchOptions(method, body);
+    res = await fetch(fetchUrl, newFetchOptions);
+  }
 
   await throwIfResponseFailed(res);
-  return res.json() as Promise<T>;
+  return (res.status === 200 ? res.json() : null) as Promise<T>;
 };
 
 const api = {
