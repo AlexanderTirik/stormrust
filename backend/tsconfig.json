@@ -24,7 +24,8 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "lib": ["es2020"],
-    "typeRoots": ["./node_modules/@types"]
+    "types": ["node", "./src/common/@types/express"],
+    "typeRoots": ["./node_modules/@types", "./src/common/@types/express"]
   },
   "include": ["./src/**/*"]
 }
