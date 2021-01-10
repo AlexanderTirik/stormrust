@@ -1,16 +1,18 @@
+import { ConnectedRouter } from 'connected-react-router';
 import React from 'react';
-import { env } from '../../env';
-import styles from './styles.module.sass';
-
-const { server } = env.urls;
+import { Provider } from 'react-redux';
+import { store } from '../../store';
+import Routing from '../Routing';
+import { history } from '../../common/helpers/historyHelper';
 
 const App = () => (
-  <div className={styles.App}>
-    <header>
-      <p>Storm Rust</p>
-    </header>
-    <a href={`${server}/api/auth/login`}>Login</a>
-  </div>
+  <Provider store={store}>
+    <ConnectedRouter history={history}>
+      <>
+        <Routing />
+      </>
+    </ConnectedRouter>
+  </Provider>
 );
 
 export default App;
